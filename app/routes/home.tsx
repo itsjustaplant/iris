@@ -1,23 +1,16 @@
 import {
   BellIcon,
   CaretDownIcon,
-  ChartLineUpIcon,
   DotsThreeOutlineIcon,
   FlowerLotusIcon,
-  GearSixIcon,
-  HouseIcon,
   MagnifyingGlassIcon,
   PlusIcon,
-  QuestionIcon,
   SparkleIcon,
-  SquaresFourIcon,
-  UsersThreeIcon,
 } from "@phosphor-icons/react";
 
-import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Iris" },
     { name: "description", content: "A close-up study of an iris in bloom." },
@@ -42,7 +35,9 @@ export default function Home() {
           <div className="grid size-8 place-items-center bg-primary text-primary-foreground">
             <FlowerLotusIcon size={18} weight="bold" />
           </div>
-          <span className="font-heading text-sm font-semibold tracking-tight">IRIS</span>
+          <span className="font-heading text-sm font-semibold tracking-tight">
+            IRIS
+          </span>
           <span className="hidden border-l border-border pl-3 text-xs text-muted-foreground sm:block">
             Workspace
           </span>
@@ -72,8 +67,12 @@ export default function Home() {
                   <SparkleIcon size={15} weight="fill" />
                   GOOD MORNING
                 </p>
-                <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">Overview</h1>
-                <p className="mt-2 text-sm text-muted-foreground">A quiet place to keep your ideas in bloom.</p>
+                <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Overview
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  A quiet place to keep your ideas in bloom.
+                </p>
               </div>
               <Button>
                 <PlusIcon size={16} weight="bold" data-icon="inline-start" />
@@ -89,7 +88,9 @@ export default function Home() {
               ].map(([label, value, detail]) => (
                 <article key={label} className="bg-card p-5">
                   <p className="text-xs text-muted-foreground">{label}</p>
-                  <p className="mt-5 font-heading text-3xl font-semibold">{value}</p>
+                  <p className="mt-5 font-heading text-3xl font-semibold">
+                    {value}
+                  </p>
                   <p className="mt-2 text-xs text-primary">{detail}</p>
                 </article>
               ))}
@@ -99,15 +100,27 @@ export default function Home() {
               <div className="flex items-center justify-between border-b border-border px-5 py-4">
                 <div>
                   <h2 className="text-sm font-semibold">Recent studies</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Your latest observations and fragments.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Your latest observations and fragments.
+                  </p>
                 </div>
-                <Button variant="ghost" size="icon-sm" aria-label="More options">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="More options"
+                >
                   <DotsThreeOutlineIcon size={18} weight="fill" />
                 </Button>
               </div>
               <div className="grid min-h-44 place-items-center p-5 text-center">
-                <FlowerLotusIcon size={26} className="text-primary" weight="duotone" />
-                <p className="-mt-6 text-sm text-muted-foreground">Your next idea can start here.</p>
+                <FlowerLotusIcon
+                  size={26}
+                  className="text-primary"
+                  weight="duotone"
+                />
+                <p className="-mt-6 text-sm text-muted-foreground">
+                  Your next idea can start here.
+                </p>
               </div>
             </section>
           </div>
