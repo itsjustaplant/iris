@@ -11,6 +11,27 @@ import type { Route } from "./+types/root";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.ico", sizes: "any" },
+  {
+    rel: "apple-touch-icon",
+    href: "/apple-touch-icon-iphone-60x60.png",
+    sizes: "60x60",
+  },
+  {
+    rel: "apple-touch-icon",
+    href: "/apple-touch-icon-iphone-retina-120x120.png",
+    sizes: "120x120",
+  },
+  {
+    rel: "apple-touch-icon",
+    href: "/apple-touch-icon-ipad-76x76.png",
+    sizes: "76x76",
+  },
+  {
+    rel: "apple-touch-icon",
+    href: "/apple-touch-icon-ipad-retina-152x152.png",
+    sizes: "152x152",
+  },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -25,7 +46,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
