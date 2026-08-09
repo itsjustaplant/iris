@@ -7,8 +7,13 @@ import {
   PlusIcon,
   SparkleIcon,
 } from "@phosphor-icons/react";
+import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
+
+type DirectoryPickerWindow = Window & {
+  showDirectoryPicker?: () => Promise<{ name: string }>;
+};
 
 export function meta() {
   return [
@@ -18,6 +23,27 @@ export function meta() {
 }
 
 export default function Home() {
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [pickerError, setPickerError] = useState<string | null>(null);
+
+  async function handleNewCollection() {
+    const directoryPicker = (window as DirectoryPickerWindow).showDirectoryPicker;
+
+    if (!directoryPicker) {
+      setPickerError("Your browser does not support choosing folders.");
+      return;
+    }
+
+    try {
+      const folder = await directoryPicker();
+      setSelectedFolder(folder.name);
+      setPickerError(null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setPickerError("We could not open the folder picker. Please try again.");
+    }
+  }
+
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
       <div
@@ -76,11 +102,17 @@ export default function Home() {
                   A quiet place to keep your ideas in bloom.
                 </p>
               </div>
-              <Button>
+              <Button onClick={handleNewCollection}>
                 <PlusIcon size={16} weight="bold" data-icon="inline-start" />
                 New collection
               </Button>
             </div>
+
+            {(selectedFolder || pickerError) && (
+              <p className={`mt-3 text-xs ${pickerError ? "text-destructive" : "text-primary"}`}>
+                {pickerError ?? `Selected folder: ${selectedFolder}`}
+              </p>
+            )}
 
             <section className="mt-7 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
               {[
