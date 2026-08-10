@@ -10,6 +10,7 @@ export const databasePath = join(appDataDirectory, "iris.sqlite");
 export type ScanFolder = {
   id: number;
   path: string;
+  collectionName: string;
   createdAt: string;
 };
 
@@ -33,9 +34,20 @@ export function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS scan_folders (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL UNIQUE,
+        collection_name TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    const columns = database.prepare("PRAGMA table_info(scan_folders)").all() as {
+      name: string;
+    }[];
+
+    if (!columns.some((column) => column.name === "collection_name")) {
+      database.exec(
+        "ALTER TABLE scan_folders ADD COLUMN collection_name TEXT NOT NULL DEFAULT ''",
+      );
+    }
   } finally {
     database.close();
   }
@@ -48,7 +60,7 @@ export function getScanFolders(): ScanFolder[] {
   try {
     return database
       .prepare(
-        "SELECT id, path, created_at AS createdAt FROM scan_folders ORDER BY created_at DESC",
+        "SELECT id, path, collection_name AS collectionName, created_at AS createdAt FROM scan_folders ORDER BY created_at DESC",
       )
       .all() as ScanFolder[];
   } finally {
@@ -56,14 +68,16 @@ export function getScanFolders(): ScanFolder[] {
   }
 }
 
-export function addScanFolder(path: string) {
+export function addScanFolder(path: string, collectionName: string) {
   initializeDatabase();
 
   const database = new DatabaseSync(databasePath);
   try {
     database
-      .prepare("INSERT OR IGNORE INTO scan_folders (path) VALUES (?)")
-      .run(path);
+      .prepare(
+        "INSERT INTO scan_folders (path, collection_name) VALUES (?, ?) ON CONFLICT(path) DO UPDATE SET collection_name = excluded.collection_name",
+      )
+      .run(path, collectionName);
   } finally {
     database.close();
   }

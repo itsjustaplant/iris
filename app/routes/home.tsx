@@ -1,4 +1,8 @@
-import { DotsThreeOutlineIcon, FlowerLotusIcon, PlusIcon } from "@phosphor-icons/react";
+import {
+  DotsThreeOutlineIcon,
+  FlowerLotusIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { useFetcher, useLoaderData } from "react-router";
 
@@ -21,12 +25,18 @@ export async function loader() {
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const path = formData.get("path");
+  const collectionName = formData.get("collectionName");
 
-  if (typeof path !== "string" || !path.trim()) {
-    return { error: "A folder path is required." };
+  if (
+    typeof path !== "string" ||
+    !path.trim() ||
+    typeof collectionName !== "string" ||
+    !collectionName.trim()
+  ) {
+    return { error: "A collection name and folder path are required." };
   }
 
-  addScanFolder(path.trim());
+  addScanFolder(path.trim(), collectionName.trim());
   return { success: true };
 }
 
@@ -44,8 +54,8 @@ export default function Home() {
     setIsFolderPickerOpen(true);
   }
 
-  function handleFolderSelect(path: string) {
-    fetcher.submit({ path }, { method: "post" });
+  function handleFolderSelect(path: string, collectionName: string) {
+    fetcher.submit({ path, collectionName }, { method: "post" });
   }
 
   return (
@@ -87,17 +97,10 @@ export default function Home() {
                   A quiet place to keep your ideas in bloom.
                 </p>
               </div>
-              {isFoldersEmpty ? (
-                <Button onClick={handleNewCollection}>
-                  <PlusIcon size={16} weight="bold" data-icon="inline-start" />
-                  New collection
-                </Button>
-              ) : (
-                <Button onClick={handleNewCollection}>
-                  <PlusIcon size={16} weight="bold" data-icon="inline-start" />
-                  Refresh
-                </Button>
-              )}
+              <Button onClick={handleNewCollection}>
+                <PlusIcon size={16} weight="bold" data-icon="inline-start" />
+                New collection
+              </Button>
             </div>
             {isFoldersEmpty ? (
               <div className="mt-7 space-y-2">
@@ -148,7 +151,10 @@ export default function Home() {
                     <ul className="divide-y divide-border">
                       {folders.map((folder) => (
                         <li key={folder.id} className="px-5 py-3 text-sm">
-                          {folder.path}
+                          <p>{folder.collectionName}</p>
+                          <p className="mt-1 font-mono text-xs text-muted-foreground">
+                            {folder.path}
+                          </p>
                         </li>
                       ))}
                     </ul>
