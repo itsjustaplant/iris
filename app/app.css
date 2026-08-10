@@ -127,11 +127,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
+    overscroll-behavior-y: none;
   }
   html {
     @apply font-mono;
