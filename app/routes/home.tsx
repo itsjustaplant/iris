@@ -1,15 +1,16 @@
-import {
-  DotsThreeOutlineIcon,
-  FlowerLotusIcon,
-  PlusIcon,
-} from "@phosphor-icons/react";
+import { FlowerLotusIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useFetcher, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
 import { FolderPicker } from "~/components/folder-picker";
-import { addScanFolder, getScanFolders } from "~/lib/database.server";
+import {
+  addScanFolder,
+  deleteScanFolder,
+  getItemCount,
+  getScanFolders,
+} from "~/lib/database.server";
 
 export function meta() {
   return [
@@ -19,11 +20,24 @@ export function meta() {
 }
 
 export async function loader() {
-  return { folders: getScanFolders() };
+  return { folders: getScanFolders(), itemCount: getItemCount() };
 }
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "delete") {
+    const id = Number(formData.get("id"));
+
+    if (!Number.isInteger(id) || id < 1) {
+      return { error: "A valid folder record is required." };
+    }
+
+    deleteScanFolder(id);
+    return { success: true };
+  }
+
   const path = formData.get("path");
   const collectionName = formData.get("collectionName");
 
@@ -41,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Home() {
-  const { folders } = useLoaderData<typeof loader>();
+  const { folders, itemCount } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const isFoldersEmpty = !folders?.length;
   const [pickerError, setPickerError] = useState<string | null>(null);
@@ -55,7 +69,11 @@ export default function Home() {
   }
 
   function handleFolderSelect(path: string, collectionName: string) {
-    fetcher.submit({ path, collectionName }, { method: "post" });
+    fetcher.submit({ intent: "add", path, collectionName }, { method: "post" });
+  }
+
+  function handleDeleteFolder(id: number) {
+    fetcher.submit({ intent: "delete", id }, { method: "post" });
   }
 
   return (
@@ -115,11 +133,10 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <section className="mt-7 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+                <section className="mt-7 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-2">
                   {[
-                    ["Collections", "12", "Growing archive"],
-                    ["Notes this week", "48", "+16% from last week"],
-                    ["In bloom", "06", "Ideas in progress"],
+                    ["Collections", folders.length || 0, "Growing archive"],
+                    ["Items", itemCount, "Across all collections"],
                   ].map(([label, value, detail]) => (
                     <article key={label} className="bg-card p-5">
                       <p className="text-xs text-muted-foreground">{label}</p>
@@ -139,22 +156,31 @@ export default function Home() {
                         Locations Iris will include in its library.
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="More options"
-                    >
-                      <DotsThreeOutlineIcon size={18} weight="fill" />
-                    </Button>
                   </div>
                   {folders.length > 0 ? (
                     <ul className="divide-y divide-border">
                       {folders.map((folder) => (
-                        <li key={folder.id} className="px-5 py-3 text-sm">
-                          <p>{folder.collectionName}</p>
-                          <p className="mt-1 font-mono text-xs text-muted-foreground">
-                            {folder.path}
-                          </p>
+                        <li
+                          key={folder.id}
+                          className="flex items-center justify-between gap-4 px-5 py-3"
+                        >
+                          <div className="min-w-0 text-sm">
+                            <p>{folder.collectionName}</p>
+                            <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
+                              {folder.path}
+                            </p>
+                            <p className="mt-1 text-xs text-primary">
+                              {folder.itemCount} items
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Delete ${folder.collectionName}`}
+                            onClick={() => handleDeleteFolder(folder.id)}
+                          >
+                            <TrashIcon size={17} />
+                          </Button>
                         </li>
                       ))}
                     </ul>

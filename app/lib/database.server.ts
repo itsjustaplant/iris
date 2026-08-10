@@ -11,6 +11,7 @@ export type ScanFolder = {
   id: number;
   path: string;
   collectionName: string;
+  itemCount: number;
   createdAt: string;
 };
 
@@ -24,18 +25,20 @@ export function initializeDatabase() {
   const database = new DatabaseSync(databasePath);
   try {
     database.exec(`
-      CREATE TABLE IF NOT EXISTS collections (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        folder_path TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
-
       CREATE TABLE IF NOT EXISTS scan_folders (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL UNIQUE,
         collection_name TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS collections (
+        id INTEGER PRIMARY KEY,
+        collection_id INTEGER NOT NULL,
+        path TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (collection_id) REFERENCES scan_folders(id),
+        UNIQUE (collection_id, path)
       );
     `);
 
@@ -60,9 +63,32 @@ export function getScanFolders(): ScanFolder[] {
   try {
     return database
       .prepare(
-        "SELECT id, path, collection_name AS collectionName, created_at AS createdAt FROM scan_folders ORDER BY created_at DESC",
+        `SELECT
+          scan_folders.id,
+          scan_folders.path,
+          scan_folders.collection_name AS collectionName,
+          COUNT(collections.id) AS itemCount,
+          scan_folders.created_at AS createdAt
+        FROM scan_folders
+        LEFT JOIN collections ON collections.collection_id = scan_folders.id
+        GROUP BY scan_folders.id
+        ORDER BY scan_folders.created_at DESC`,
       )
       .all() as ScanFolder[];
+  } finally {
+    database.close();
+  }
+}
+
+export function getItemCount() {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    const row = database.prepare("SELECT COUNT(*) AS count FROM collections").get() as {
+      count: number;
+    };
+    return row.count;
   } finally {
     database.close();
   }
@@ -78,6 +104,17 @@ export function addScanFolder(path: string, collectionName: string) {
         "INSERT INTO scan_folders (path, collection_name) VALUES (?, ?) ON CONFLICT(path) DO UPDATE SET collection_name = excluded.collection_name",
       )
       .run(path, collectionName);
+  } finally {
+    database.close();
+  }
+}
+
+export function deleteScanFolder(id: number) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    database.prepare("DELETE FROM scan_folders WHERE id = ?").run(id);
   } finally {
     database.close();
   }
