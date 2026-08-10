@@ -77,15 +77,15 @@ export default function Home() {
   }
 
   return (
-    <div className="relative isolate min-h-screen w-full max-w-[1920px] overflow-hidden bg-background text-foreground min-[1921px]:border min-[1921px]:border-border">
+    <div className="relative isolate min-h-screen w-full max-w-[1180px] overflow-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(72vh,48rem)] bg-cover bg-bottom bg-no-repeat opacity-55 grayscale-[40%] [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-cover bg-right-top bg-no-repeat opacity-55 grayscale-[40%] [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
         style={{ backgroundImage: "url('/iris.jpeg')" }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(72vh,48rem)] bg-gradient-to-t from-transparent via-background/35 to-background"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-gradient-to-t from-transparent via-background/35 to-background"
       />
 
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
