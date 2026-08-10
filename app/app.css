@@ -47,6 +47,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --font-heading: var(--font-mono);
+  --breakpoint-3xl: 1920px;
 }
 
 :root {
@@ -126,6 +127,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   html {
     @apply font-mono;

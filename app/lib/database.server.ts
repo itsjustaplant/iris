@@ -7,6 +7,12 @@ const appDataDirectory = envPaths("Iris", { suffix: "" }).data;
 console.log(appDataDirectory)
 export const databasePath = join(appDataDirectory, "iris.sqlite");
 
+export type ScanFolder = {
+  id: number;
+  path: string;
+  createdAt: string;
+};
+
 /**
  * Creates the local database on the first server start and ensures its initial
  * tables exist on subsequent starts.
@@ -30,6 +36,34 @@ export function initializeDatabase() {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+  } finally {
+    database.close();
+  }
+}
+
+export function getScanFolders(): ScanFolder[] {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    return database
+      .prepare(
+        "SELECT id, path, created_at AS createdAt FROM scan_folders ORDER BY created_at DESC",
+      )
+      .all() as ScanFolder[];
+  } finally {
+    database.close();
+  }
+}
+
+export function addScanFolder(path: string) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    database
+      .prepare("INSERT OR IGNORE INTO scan_folders (path) VALUES (?)")
+      .run(path);
   } finally {
     database.close();
   }
