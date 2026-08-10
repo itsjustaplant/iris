@@ -36,6 +36,10 @@ export function initializeDatabase() {
         id INTEGER PRIMARY KEY,
         collection_id INTEGER NOT NULL,
         path TEXT NOT NULL,
+        movie_name TEXT,
+        movie_release_year INTEGER,
+        movie_length INTEGER,
+        movie_progress INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (collection_id) REFERENCES scan_folders(id),
         UNIQUE (collection_id, path)
@@ -50,6 +54,22 @@ export function initializeDatabase() {
       database.exec(
         "ALTER TABLE scan_folders ADD COLUMN collection_name TEXT NOT NULL DEFAULT ''",
       );
+    }
+
+    const collectionColumns = database.prepare("PRAGMA table_info(collections)").all() as {
+      name: string;
+    }[];
+    const missingCollectionColumns = [
+      ["movie_name", "TEXT"],
+      ["movie_release_year", "INTEGER"],
+      ["movie_length", "INTEGER"],
+      ["movie_progress", "INTEGER NOT NULL DEFAULT 0"],
+    ] as const;
+
+    for (const [name, definition] of missingCollectionColumns) {
+      if (!collectionColumns.some((column) => column.name === name)) {
+        database.exec(`ALTER TABLE collections ADD COLUMN ${name} ${definition}`);
+      }
     }
   } finally {
     database.close();
