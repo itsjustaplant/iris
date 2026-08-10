@@ -1,6 +1,6 @@
 import { FlowerLotusIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useFetcher, useLoaderData } from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
@@ -77,34 +77,8 @@ export default function Home() {
   }
 
   return (
-    <div className="relative isolate min-h-screen w-full max-w-[1180px] overflow-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-cover bg-top-right bg-no-repeat opacity-55 grayscale-40 [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
-        style={{ backgroundImage: "url('/iris.jpeg')" }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-gradient-to-t from-transparent via-background/35 to-background"
-      />
-
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
-        <div className="flex items-center gap-3">
-          <img
-            src="/iris-background-removed.png"
-            alt="Iris"
-            className="size-8 object-contain"
-          />
-          <span className="font-heading text-sm font-semibold tracking-tight">
-            IRIS
-          </span>
-          <span className="hidden border-l border-border pl-3 text-xs text-muted-foreground sm:block">
-            Workspace
-          </span>
-        </div>
-      </header>
-      <div className="flex">
-        <main className="min-w-0 flex-1">
+    <>
+      <main className="min-w-0 flex-1">
           <div>
             <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end p-5 sm:p-8">
               <div>
@@ -164,7 +138,10 @@ export default function Home() {
                           key={folder.id}
                           className="flex items-center justify-between gap-4 px-5 py-3"
                         >
-                          <div className="min-w-0 text-sm">
+                          <Link
+                            to={`/collections/${folder.id}`}
+                            className="min-w-0 flex-1 text-sm"
+                          >
                             <p>{folder.collectionName}</p>
                             <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
                               {folder.path}
@@ -172,7 +149,7 @@ export default function Home() {
                             <p className="mt-1 text-xs text-primary">
                               {folder.itemCount} items
                             </p>
-                          </div>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon-sm"
@@ -200,13 +177,12 @@ export default function Home() {
               </div>
             )}
           </div>
-        </main>
-      </div>
+      </main>
       <FolderPicker
         open={isFolderPickerOpen}
         onOpenChange={setIsFolderPickerOpen}
         onSelect={handleFolderSelect}
       />
-    </div>
+    </>
   );
 }

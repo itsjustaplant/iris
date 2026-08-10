@@ -2,5 +2,6 @@ import { index, route, type RouteConfig } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
+  route("collections/:collectionId", "routes/collection.tsx"),
   route("api/folders", "routes/api.folders.ts"),
 ] satisfies RouteConfig;

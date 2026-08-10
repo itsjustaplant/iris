@@ -15,6 +15,16 @@ export type ScanFolder = {
   createdAt: string;
 };
 
+export type CollectionItem = {
+  id: number;
+  path: string;
+  movieName: string | null;
+  movieReleaseYear: number | null;
+  movieLength: number | null;
+  movieProgress: number;
+  createdAt: string;
+};
+
 /**
  * Creates the local database on the first server start and ensures its initial
  * tables exist on subsequent starts.
@@ -109,6 +119,46 @@ export function getItemCount() {
       count: number;
     };
     return row.count;
+  } finally {
+    database.close();
+  }
+}
+
+export function getCollection(id: number) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    return (database
+      .prepare(
+        "SELECT id, path, collection_name AS collectionName FROM scan_folders WHERE id = ?",
+      )
+      .get(id) as Pick<ScanFolder, "id" | "path" | "collectionName"> | undefined) ?? null;
+  } finally {
+    database.close();
+  }
+}
+
+export function getCollectionItems(collectionId: number): CollectionItem[] {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    return database
+      .prepare(
+        `SELECT
+          id,
+          path,
+          movie_name AS movieName,
+          movie_release_year AS movieReleaseYear,
+          movie_length AS movieLength,
+          movie_progress AS movieProgress,
+          created_at AS createdAt
+        FROM collections
+        WHERE collection_id = ?
+        ORDER BY movie_name, path`,
+      )
+      .all(collectionId) as CollectionItem[];
   } finally {
     database.close();
   }
