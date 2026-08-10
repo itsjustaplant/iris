@@ -80,7 +80,7 @@ export default function Home() {
     <div className="relative isolate min-h-screen w-full max-w-[1180px] overflow-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-cover bg-right-top bg-no-repeat opacity-55 grayscale-[40%] [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[min(42vh,48rem)] bg-cover bg-top-right bg-no-repeat opacity-55 grayscale-40 [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
         style={{ backgroundImage: "url('/iris.jpeg')" }}
       />
       <div
@@ -104,15 +104,15 @@ export default function Home() {
         </div>
       </header>
       <div className="flex">
-        <main className="min-w-0 flex-1 p-5 sm:p-8">
-          <div className="mx-auto max-w-5xl">
-            <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
+        <main className="min-w-0 flex-1">
+          <div>
+            <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end p-5 sm:p-8">
               <div>
                 <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Movies
+                  Collections
                 </h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  A quiet place to keep your ideas in bloom.
+                  Your personal library of films, ready to watch.
                 </p>
               </div>
               <Button onClick={handleNewCollection}>
@@ -121,7 +121,7 @@ export default function Home() {
               </Button>
             </div>
             {isFoldersEmpty ? (
-              <div className="mt-7 space-y-2">
+              <div className="mt-7 space-y-2 p-5 sm:p-8">
                 <p className="text-sm text-muted-foreground">
                   Pick a folder first to start building your library.
                 </p>
@@ -132,7 +132,7 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              <>
+              <div className="p-5 sm:p-8">
                 <section className="mt-7 grid gap-px border border-border bg-border sm:grid-cols-2 lg:grid-cols-2">
                   {[
                     ["Collections", folders.length || 0, "Growing archive"],
@@ -197,7 +197,7 @@ export default function Home() {
                     </div>
                   )}
                 </section>
-              </>
+              </div>
             )}
           </div>
         </main>
