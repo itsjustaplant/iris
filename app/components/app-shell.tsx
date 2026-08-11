@@ -1,10 +1,32 @@
 import type { ReactNode } from "react";
+import { useMatches } from "react-router";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "~/components/ui/breadcrumb";
 
 type AppShellProps = {
   children: ReactNode;
 };
 
 export function AppShell({ children }: AppShellProps) {
+  const matches = useMatches();
+  const collectionMatch = matches.find(
+    (match) =>
+      typeof match.loaderData === "object" &&
+      match.loaderData !== null &&
+      "collection" in match.loaderData,
+  );
+  const collection = collectionMatch?.loaderData as
+    | { collection?: { collectionName?: string } }
+    | undefined;
+  const collectionName = collection?.collection?.collectionName;
+
   return (
     <div className="relative isolate min-h-dvh w-full max-w-[1180px] overflow-x-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
       <div
@@ -27,9 +49,27 @@ export function AppShell({ children }: AppShellProps) {
           <span className="font-heading text-sm font-semibold tracking-tight">
             IRIS
           </span>
-          <span className="hidden border-l border-border pl-3 text-xs text-muted-foreground sm:block">
-            Collections
-          </span>
+          <Breadcrumb className="min-w-0 border-l border-border pl-3">
+            <BreadcrumbList className="flex-nowrap">
+              <BreadcrumbItem>
+                {collectionName ? (
+                  <BreadcrumbLink to="/">Collections</BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>Collections</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {collectionName && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbPage className="max-w-48 sm:max-w-80">
+                      {collectionName}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
       </header>
 

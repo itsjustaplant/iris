@@ -1,5 +1,5 @@
-import { ArrowLeftIcon, FilmSlateIcon } from "@phosphor-icons/react";
-import { Link, useLoaderData } from "react-router";
+import { FilmSlateIcon } from "@phosphor-icons/react";
+import { useLoaderData } from "react-router";
 
 import type { Route } from "./+types/collection";
 import { getCollection, getCollectionItems } from "~/lib/database.server";
