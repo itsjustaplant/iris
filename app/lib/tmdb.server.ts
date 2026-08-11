@@ -2,6 +2,20 @@ import type { ScannedVideo } from "~/lib/media-scanner.server";
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const LOOKUP_CONCURRENCY = 4;
+const TMDB_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
+
+export type CachedTmdbVideo = {
+  path: string;
+  movieName: string | null;
+  movieReleaseYear: number | null;
+  tmdbId: number | null;
+  overview: string | null;
+  releaseDate: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  tmdbRating: number | null;
+  tmdbLastFetchedAt: string | null;
+};
 
 type TmdbSearchMovie = {
   id: number;
@@ -22,9 +36,37 @@ function comparableTitle(title: string) {
   return title.normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
-async function findMovie(video: ScannedVideo): Promise<ScannedVideo> {
+function withCachedMetadata(
+  video: ScannedVideo,
+  cached: CachedTmdbVideo | undefined,
+): ScannedVideo {
+  if (!cached) return video;
+  return {
+    ...video,
+    movieName: cached.movieName ?? video.movieName,
+    movieReleaseYear: cached.movieReleaseYear ?? video.movieReleaseYear,
+    tmdbId: cached.tmdbId ?? undefined,
+    overview: cached.overview,
+    releaseDate: cached.releaseDate,
+    posterPath: cached.posterPath,
+    backdropPath: cached.backdropPath,
+    tmdbRating: cached.tmdbRating ?? undefined,
+    tmdbLastFetchedAt: cached.tmdbLastFetchedAt ?? undefined,
+  };
+}
+
+function hasFreshTmdbMetadata(cached: CachedTmdbVideo | undefined) {
+  if (!cached?.tmdbId || !cached.tmdbLastFetchedAt) return false;
+  const fetchedAt = Date.parse(cached.tmdbLastFetchedAt);
+  return Number.isFinite(fetchedAt) && Date.now() - fetchedAt < TMDB_MAX_AGE_MS;
+}
+
+async function findMovie(
+  video: ScannedVideo,
+  cached: CachedTmdbVideo | undefined,
+): Promise<ScannedVideo> {
   const token = process.env.TMDB_API_READ_TOKEN?.trim();
-  if (!token) return video;
+  if (!token) return withCachedMetadata(video, cached);
 
   const search = new URLSearchParams({
     query: video.movieName,
@@ -43,7 +85,7 @@ async function findMovie(video: ScannedVideo): Promise<ScannedVideo> {
       },
       signal: AbortSignal.timeout(8_000),
     });
-    if (!response.ok) return video;
+    if (!response.ok) return withCachedMetadata(video, cached);
 
     const data = (await response.json()) as TmdbSearchResponse;
     const expectedTitle = comparableTitle(video.movieName);
@@ -57,7 +99,7 @@ async function findMovie(video: ScannedVideo): Promise<ScannedVideo> {
       return titleMatches && yearMatches;
     });
 
-    if (!match) return video;
+    if (!match) return withCachedMetadata(video, cached);
 
     return {
       ...video,
@@ -71,25 +113,42 @@ async function findMovie(video: ScannedVideo): Promise<ScannedVideo> {
       posterPath: match.poster_path,
       backdropPath: match.backdrop_path,
       tmdbRating: match.vote_average,
+      tmdbLastFetchedAt: new Date().toISOString(),
     };
   } catch {
-    return video;
+    return withCachedMetadata(video, cached);
   }
 }
 
 /** Adds TMDB metadata without failing the underlying filesystem scan. */
 export async function enrichVideosWithTmdb(
   videos: ScannedVideo[],
+  cachedVideos: CachedTmdbVideo[] = [],
 ): Promise<ScannedVideo[]> {
-  if (!process.env.TMDB_API_READ_TOKEN?.trim()) return videos;
+  const cachedByPath = new Map(cachedVideos.map((video) => [video.path, video]));
+  const videosNeedingLookup = videos.filter(
+    (video) => !hasFreshTmdbMetadata(cachedByPath.get(video.path)),
+  );
+  const enrichedByPath = new Map(
+    videos
+      .filter((video) => hasFreshTmdbMetadata(cachedByPath.get(video.path)))
+      .map((video) => [
+        video.path,
+        withCachedMetadata(video, cachedByPath.get(video.path)),
+      ]),
+  );
 
-  const enriched: ScannedVideo[] = [];
-  for (let index = 0; index < videos.length; index += LOOKUP_CONCURRENCY) {
-    enriched.push(
-      ...(await Promise.all(
-        videos.slice(index, index + LOOKUP_CONCURRENCY).map(findMovie),
-      )),
+  for (
+    let index = 0;
+    index < videosNeedingLookup.length;
+    index += LOOKUP_CONCURRENCY
+  ) {
+    const batch = videosNeedingLookup.slice(index, index + LOOKUP_CONCURRENCY);
+    const results = await Promise.all(
+      batch.map((video) => findMovie(video, cachedByPath.get(video.path))),
     );
+    for (const result of results) enrichedByPath.set(result.path, result);
   }
-  return enriched;
+
+  return videos.map((video) => enrichedByPath.get(video.path) ?? video);
 }

@@ -75,7 +75,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="relative z-10 flex-1">{children}</div>
 
       <footer className="relative z-10 mt-auto flex min-h-16 items-end justify-end px-5 py-4 text-right sm:px-8">
-        <p className="max-w-md text-[10px] leading-relaxed text-foreground/60 drop-shadow-[0_1px_2px_var(--background)] sm:text-xs">
+        <p className="max-w-md text-[10px] leading-relaxed text-foreground/60 drop-shadow-[0_1px_2px_var(--background)]">
           This product uses the{" "}
           <a
             href="https://www.themoviedb.org"

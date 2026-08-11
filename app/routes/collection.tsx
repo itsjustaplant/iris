@@ -1,9 +1,16 @@
-import { FilmSlateIcon } from "@phosphor-icons/react";
-import { useLoaderData } from "react-router";
+import { ArrowsClockwiseIcon, FilmSlateIcon } from "@phosphor-icons/react";
+import { useFetcher, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/collection";
-import { getCollection, getCollectionItems } from "~/lib/database.server";
+import { Button } from "~/components/ui/button";
+import {
+  getCollection,
+  getCollectionItems,
+  saveScanResults,
+} from "~/lib/database.server";
+import { scanFolderForVideos } from "~/lib/media-scanner.server";
 import { isLocalRequest } from "~/lib/request.server";
+import { enrichVideosWithTmdb } from "~/lib/tmdb.server";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const collectionId = Number(params.collectionId);
@@ -27,11 +34,53 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   return {
     collection: { ...collection, path: isLocal ? collection.path : null },
     items,
+    isLocal,
   };
 }
 
+export async function action({ params, request }: Route.ActionArgs) {
+  if (!isLocalRequest(request)) {
+    throw new Response("Collection rescanning is only available locally.", {
+      status: 403,
+    });
+  }
+
+  const collectionId = Number(params.collectionId);
+  if (!Number.isInteger(collectionId) || collectionId < 1) {
+    throw new Response("Collection not found.", { status: 404 });
+  }
+
+  const collection = getCollection(collectionId);
+  if (!collection) {
+    throw new Response("Collection not found.", { status: 404 });
+  }
+
+  try {
+    const scan = await scanFolderForVideos(collection.path);
+    const existingItems = getCollectionItems(collectionId);
+    const videos = await enrichVideosWithTmdb(scan.videos, existingItems);
+    const result = saveScanResults(
+      scan.path,
+      collection.collectionName,
+      videos,
+    );
+    return { success: true, itemCount: result.itemCount };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "The collection could not be rescanned.",
+    };
+  }
+}
+
 export default function Collection() {
-  const { collection, items } = useLoaderData<typeof loader>();
+  const { collection, items, isLocal } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher<typeof action>();
+  const isRescanning = fetcher.state !== "idle";
+  const rescanError =
+    fetcher.data && "error" in fetcher.data ? fetcher.data.error : null;
 
   return (
     <main className="min-w-0 flex-1">
@@ -47,12 +96,30 @@ export default function Collection() {
               </p>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {items.length} {items.length === 1 ? "item" : "items"}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              {items.length} {items.length === 1 ? "item" : "items"}
+            </p>
+            {isLocal && (
+              <Button
+                variant="outline"
+                onClick={() => fetcher.submit(null, { method: "post" })}
+                disabled={isRescanning}
+              >
+                <ArrowsClockwiseIcon
+                  data-icon="inline-start"
+                  className={isRescanning ? "animate-spin" : undefined}
+                />
+                {isRescanning ? "Rescanning…" : "Rescan"}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="p-5 sm:p-8">
+          {rescanError && (
+            <p className="mb-4 text-xs text-destructive">{rescanError}</p>
+          )}
           {items.length ? (
             <section className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
               {items.map((item) => (

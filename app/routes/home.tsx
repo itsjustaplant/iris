@@ -8,10 +8,14 @@ import { FolderPicker } from "~/components/folder-picker";
 import {
   deleteScanFolder,
   getItemCount,
+  getScanFolderByPath,
   getScanFolders,
   saveScanResults,
 } from "~/lib/database.server";
-import { scanFolderForVideos } from "~/lib/media-scanner.server";
+import {
+  resolveScanFolderPath,
+  scanFolderForVideos,
+} from "~/lib/media-scanner.server";
 import { isLocalRequest } from "~/lib/request.server";
 import { enrichVideosWithTmdb } from "~/lib/tmdb.server";
 
@@ -66,9 +70,16 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   try {
-    const scan = await scanFolderForVideos(path.trim());
+    const resolvedPath = await resolveScanFolderPath(path.trim());
+    if (getScanFolderByPath(resolvedPath)) {
+      return { error: "This folder is already part of a collection." };
+    }
+
+    const scan = await scanFolderForVideos(resolvedPath);
     const videos = await enrichVideosWithTmdb(scan.videos);
-    const result = saveScanResults(scan.path, collectionName.trim(), videos);
+    const result = saveScanResults(scan.path, collectionName.trim(), videos, {
+      createOnly: true,
+    });
 
     return { success: true, itemCount: result.itemCount };
   } catch (error) {

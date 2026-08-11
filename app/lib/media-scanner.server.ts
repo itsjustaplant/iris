@@ -31,6 +31,7 @@ export type ScannedVideo = {
   posterPath?: string | null;
   backdropPath?: string | null;
   tmdbRating?: number;
+  tmdbLastFetchedAt?: string;
 };
 
 export type FolderScanResult = {
@@ -40,13 +41,7 @@ export type FolderScanResult = {
 
 /** Recursively finds video files without following symbolic-link directories. */
 export async function scanFolderForVideos(path: string): Promise<FolderScanResult> {
-  const rootPath = await realpath(path);
-  const root = await stat(rootPath);
-
-  if (!root.isDirectory()) {
-    throw new Error("The selected path is not a folder.");
-  }
-
+  const rootPath = await resolveScanFolderPath(path);
   const videos: FolderScanResult["videos"] = [];
   const directories = [rootPath];
 
@@ -77,4 +72,14 @@ export async function scanFolderForVideos(path: string): Promise<FolderScanResul
 
   videos.sort((left, right) => left.path.localeCompare(right.path));
   return { path: rootPath, videos };
+}
+
+export async function resolveScanFolderPath(path: string) {
+  const rootPath = await realpath(path);
+  const root = await stat(rootPath);
+
+  if (!root.isDirectory()) {
+    throw new Error("The selected path is not a folder.");
+  }
+  return rootPath;
 }
