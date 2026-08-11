@@ -11,6 +11,16 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { AppShell } from "~/components/app-shell";
 
+export function meta() {
+  return [
+    { title: "Iris" },
+    {
+      name: "description",
+      content: "Your personal film library, available across your network.",
+    },
+  ];
+}
+
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "any" },
   {

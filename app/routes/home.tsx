@@ -22,7 +22,10 @@ import { enrichVideosWithTmdb } from "~/lib/tmdb.server";
 export function meta() {
   return [
     { title: "Iris" },
-    { name: "description", content: "A close-up study of an iris in bloom." },
+    {
+      name: "description",
+      content: "Your personal film library, available across your network.",
+    },
   ];
 }
 

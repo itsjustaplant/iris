@@ -12,6 +12,20 @@ import { scanFolderForVideos } from "~/lib/media-scanner.server";
 import { isLocalRequest } from "~/lib/request.server";
 import { enrichVideosWithTmdb } from "~/lib/tmdb.server";
 
+export function meta({ loaderData }: Route.MetaArgs) {
+  const collectionName = loaderData?.collection.collectionName;
+
+  return [
+    { title: collectionName ? `${collectionName} | Iris` : "Iris" },
+    {
+      name: "description",
+      content: collectionName
+        ? `Browse movies in the ${collectionName} collection.`
+        : "Browse your Iris movie collection.",
+    },
+  ];
+}
+
 export async function loader({ params, request }: Route.LoaderArgs) {
   const collectionId = Number(params.collectionId);
 
