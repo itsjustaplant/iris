@@ -2,12 +2,20 @@ import { readdir, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
+import { isLocalRequest } from "~/lib/request.server";
+
 type Folder = {
   name: string;
   path: string;
 };
 
 export async function loader({ request }: { request: Request }) {
+  if (!isLocalRequest(request)) {
+    throw new Response("Folder browsing is only available locally.", {
+      status: 403,
+    });
+  }
+
   const url = new URL(request.url);
   const rootPath = await realpath(homedir());
   const requestedPath = url.searchParams.get("path");

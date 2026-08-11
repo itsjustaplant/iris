@@ -4,7 +4,6 @@ import { DatabaseSync } from "node:sqlite";
 import envPaths from "env-paths";
 
 const appDataDirectory = envPaths("Iris", { suffix: "" }).data;
-console.log(appDataDirectory)
 export const databasePath = join(appDataDirectory, "iris.sqlite");
 
 export type ScanFolder = {

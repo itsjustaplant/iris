@@ -11,6 +11,7 @@ import {
   getItemCount,
   getScanFolders,
 } from "~/lib/database.server";
+import { isLocalRequest } from "~/lib/request.server";
 
 export function meta() {
   return [
@@ -19,11 +20,23 @@ export function meta() {
   ];
 }
 
-export async function loader() {
-  return { folders: getScanFolders(), itemCount: getItemCount() };
+export async function loader({ request }: Route.LoaderArgs) {
+  const isLocal = isLocalRequest(request);
+  const folders = getScanFolders().map((folder) => ({
+    ...folder,
+    path: isLocal ? folder.path : null,
+  }));
+
+  return { folders, itemCount: getItemCount(), isLocal };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  if (!isLocalRequest(request)) {
+    throw new Response("Collection management is only available locally.", {
+      status: 403,
+    });
+  }
+
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -55,7 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Home() {
-  const { folders, itemCount } = useLoaderData<typeof loader>();
+  const { folders, itemCount, isLocal } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const isFoldersEmpty = !folders?.length;
   const [pickerError, setPickerError] = useState<string | null>(null);
@@ -89,10 +102,12 @@ export default function Home() {
                 Your personal library of films, ready to watch.
               </p>
             </div>
-            <Button onClick={handleNewCollection}>
-              <PlusIcon size={16} weight="bold" data-icon="inline-start" />
-              New collection
-            </Button>
+            {isLocal && (
+              <Button onClick={handleNewCollection}>
+                <PlusIcon size={16} weight="bold" data-icon="inline-start" />
+                New collection
+              </Button>
+            )}
           </div>
           {isFoldersEmpty ? (
             <div className="mt-7 space-y-2 p-5 sm:p-8">
@@ -142,21 +157,25 @@ export default function Home() {
                         className="min-w-0 flex-1 text-sm"
                       >
                         <p>{folder.collectionName}</p>
-                        <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
-                          {folder.path}
-                        </p>
+                        {folder.path && (
+                          <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
+                            {folder.path}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-primary">
                           {folder.itemCount} items
                         </p>
                       </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Delete ${folder.collectionName}`}
-                        onClick={() => handleDeleteFolder(folder.id)}
-                      >
-                        <TrashIcon size={17} />
-                      </Button>
+                      {isLocal && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Delete ${folder.collectionName}`}
+                          onClick={() => handleDeleteFolder(folder.id)}
+                        >
+                          <TrashIcon size={17} />
+                        </Button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -165,11 +184,13 @@ export default function Home() {
           )}
         </div>
       </main>
-      <FolderPicker
-        open={isFolderPickerOpen}
-        onOpenChange={setIsFolderPickerOpen}
-        onSelect={handleFolderSelect}
-      />
+      {isLocal && (
+        <FolderPicker
+          open={isFolderPickerOpen}
+          onOpenChange={setIsFolderPickerOpen}
+          onSelect={handleFolderSelect}
+        />
+      )}
     </>
   );
 }

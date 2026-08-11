@@ -3,8 +3,9 @@ import { Link, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/collection";
 import { getCollection, getCollectionItems } from "~/lib/database.server";
+import { isLocalRequest } from "~/lib/request.server";
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
   const collectionId = Number(params.collectionId);
 
   if (!Number.isInteger(collectionId) || collectionId < 1) {
@@ -16,7 +17,17 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw new Response("Collection not found.", { status: 404 });
   }
 
-  return { collection, items: getCollectionItems(collectionId) };
+  const isLocal = isLocalRequest(request);
+  const items = getCollectionItems(collectionId).map((item) => ({
+    ...item,
+    displayName: item.movieName ?? item.path.split(/[\\/]/).pop() ?? "Untitled",
+    path: isLocal ? item.path : null,
+  }));
+
+  return {
+    collection: { ...collection, path: isLocal ? collection.path : null },
+    items,
+  };
 }
 
 export default function Collection() {
@@ -39,7 +50,11 @@ export default function Collection() {
             <h1 className="mt-2 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
               {collection.collectionName}
             </h1>
-            <p className="mt-2 font-mono text-xs text-muted-foreground">{collection.path}</p>
+            {collection.path && (
+              <p className="mt-2 font-mono text-xs text-muted-foreground">
+                {collection.path}
+              </p>
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {items.length} {items.length === 1 ? "item" : "items"}
@@ -54,8 +69,12 @@ export default function Collection() {
                   <FilmSlateIcon size={20} weight="duotone" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-sm font-medium">{item.movieName ?? item.path}</h2>
-                  <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{item.path}</p>
+                  <h2 className="truncate text-sm font-medium">{item.displayName}</h2>
+                  {item.path && (
+                    <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
+                      {item.path}
+                    </p>
+                  )}
                 </div>
                 <div className="hidden text-right text-xs text-muted-foreground sm:block">
                   <p>{item.movieReleaseYear ?? "Unknown year"}</p>
