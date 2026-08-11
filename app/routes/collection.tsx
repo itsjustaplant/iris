@@ -54,28 +54,32 @@ export default function Collection() {
 
         <div className="p-5 sm:p-8">
           {items.length ? (
-            <section className="mt-7 divide-y divide-border border border-border bg-card">
+            <section className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
               {items.map((item) => (
                 <article
                   key={item.id}
-                  className="flex items-center gap-4 p-4 sm:p-5"
+                  className="group min-w-0"
                 >
-                  <div className="grid size-10 shrink-0 place-items-center bg-muted text-primary">
-                    <FilmSlateIcon size={20} weight="duotone" />
+                  <div className="relative grid aspect-[2/3] w-full place-items-center overflow-hidden border border-border bg-card text-muted-foreground transition-colors group-hover:border-muted-foreground/50 group-hover:text-primary">
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-background"
+                    />
+                    <FilmSlateIcon
+                      className="relative size-10 sm:size-12"
+                      weight="duotone"
+                    />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-sm font-medium">
+                  <div className="mt-3 min-w-0">
+                    <h2 className="line-clamp-2 text-sm font-medium leading-snug">
                       {item.displayName}
                     </h2>
-                    {item.path && (
-                      <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
-                        {item.path}
-                      </p>
-                    )}
-                  </div>
-                  <div className="hidden text-right text-xs text-muted-foreground sm:block">
-                    <p>{item.movieReleaseYear ?? "Unknown year"}</p>
-                    <p className="mt-1">Progress: {item.movieProgress}</p>
+                    <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                      <span>{item.movieReleaseYear ?? "Unknown year"}</span>
+                      {item.movieProgress > 0 && (
+                        <span>{item.movieProgress}%</span>
+                      )}
+                    </div>
                   </div>
                 </article>
               ))}
