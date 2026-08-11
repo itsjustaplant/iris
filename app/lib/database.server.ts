@@ -163,16 +163,66 @@ export function getCollectionItems(collectionId: number): CollectionItem[] {
   }
 }
 
-export function addScanFolder(path: string, collectionName: string) {
+export function saveScanResults(
+  path: string,
+  collectionName: string,
+  videos: Array<{
+    path: string;
+    movieName: string;
+    movieReleaseYear: number | null;
+  }>,
+) {
   initializeDatabase();
 
   const database = new DatabaseSync(databasePath);
   try {
+    database.exec("BEGIN");
+
     database
       .prepare(
         "INSERT INTO scan_folders (path, collection_name) VALUES (?, ?) ON CONFLICT(path) DO UPDATE SET collection_name = excluded.collection_name",
       )
       .run(path, collectionName);
+
+    const collectionId = (database
+      .prepare("SELECT id FROM scan_folders WHERE path = ?")
+      .get(path) as { id: number }).id;
+
+    const upsertItem = database.prepare(
+      `INSERT INTO collections (collection_id, path, movie_name, movie_release_year)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(collection_id, path) DO UPDATE SET
+         movie_name = COALESCE(collections.movie_name, excluded.movie_name),
+         movie_release_year = COALESCE(collections.movie_release_year, excluded.movie_release_year)`,
+    );
+
+    for (const video of videos) {
+      upsertItem.run(
+        collectionId,
+        video.path,
+        video.movieName,
+        video.movieReleaseYear,
+      );
+    }
+
+    if (videos.length) {
+      const placeholders = videos.map(() => "?").join(", ");
+      database
+        .prepare(
+          `DELETE FROM collections WHERE collection_id = ? AND path NOT IN (${placeholders})`,
+        )
+        .run(collectionId, ...videos.map((video) => video.path));
+    } else {
+      database
+        .prepare("DELETE FROM collections WHERE collection_id = ?")
+        .run(collectionId);
+    }
+
+    database.exec("COMMIT");
+    return { collectionId, itemCount: videos.length };
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
   } finally {
     database.close();
   }
@@ -183,7 +233,13 @@ export function deleteScanFolder(id: number) {
 
   const database = new DatabaseSync(databasePath);
   try {
+    database.exec("BEGIN");
+    database.prepare("DELETE FROM collections WHERE collection_id = ?").run(id);
     database.prepare("DELETE FROM scan_folders WHERE id = ?").run(id);
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
   } finally {
     database.close();
   }

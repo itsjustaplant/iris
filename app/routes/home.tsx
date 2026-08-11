@@ -6,11 +6,12 @@ import type { Route } from "./+types/home";
 import { Button } from "~/components/ui/button";
 import { FolderPicker } from "~/components/folder-picker";
 import {
-  addScanFolder,
   deleteScanFolder,
   getItemCount,
   getScanFolders,
+  saveScanResults,
 } from "~/lib/database.server";
+import { scanFolderForVideos } from "~/lib/media-scanner.server";
 import { isLocalRequest } from "~/lib/request.server";
 
 export function meta() {
@@ -63,8 +64,23 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "A collection name and folder path are required." };
   }
 
-  addScanFolder(path.trim(), collectionName.trim());
-  return { success: true };
+  try {
+    const scan = await scanFolderForVideos(path.trim());
+    const result = saveScanResults(
+      scan.path,
+      collectionName.trim(),
+      scan.videos,
+    );
+
+    return { success: true, itemCount: result.itemCount };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "The folder could not be scanned.",
+    };
+  }
 }
 
 export default function Home() {
