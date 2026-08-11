@@ -13,6 +13,7 @@ import {
 } from "~/lib/database.server";
 import { scanFolderForVideos } from "~/lib/media-scanner.server";
 import { isLocalRequest } from "~/lib/request.server";
+import { enrichVideosWithTmdb } from "~/lib/tmdb.server";
 
 export function meta() {
   return [
@@ -66,11 +67,8 @@ export async function action({ request }: Route.ActionArgs) {
 
   try {
     const scan = await scanFolderForVideos(path.trim());
-    const result = saveScanResults(
-      scan.path,
-      collectionName.trim(),
-      scan.videos,
-    );
+    const videos = await enrichVideosWithTmdb(scan.videos);
+    const result = saveScanResults(scan.path, collectionName.trim(), videos);
 
     return { success: true, itemCount: result.itemCount };
   } catch (error) {

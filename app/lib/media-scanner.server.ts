@@ -21,13 +21,21 @@ const VIDEO_EXTENSIONS = new Set([
   ".wmv",
 ]);
 
+export type ScannedVideo = {
+  path: string;
+  movieName: string;
+  movieReleaseYear: number | null;
+  tmdbId?: number;
+  overview?: string | null;
+  releaseDate?: string | null;
+  posterPath?: string | null;
+  backdropPath?: string | null;
+  tmdbRating?: number;
+};
+
 export type FolderScanResult = {
   path: string;
-  videos: Array<{
-    path: string;
-    movieName: string;
-    movieReleaseYear: number | null;
-  }>;
+  videos: ScannedVideo[];
 };
 
 /** Recursively finds video files without following symbolic-link directories. */

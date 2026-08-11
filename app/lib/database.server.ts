@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import envPaths from "env-paths";
 
+import type { ScannedVideo } from "~/lib/media-scanner.server";
+
 const appDataDirectory = envPaths("Iris", { suffix: "" }).data;
 export const databasePath = join(appDataDirectory, "iris.sqlite");
 
@@ -21,6 +23,12 @@ export type CollectionItem = {
   movieReleaseYear: number | null;
   movieLength: number | null;
   movieProgress: number;
+  tmdbId: number | null;
+  overview: string | null;
+  releaseDate: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  tmdbRating: number | null;
   createdAt: string;
 };
 
@@ -49,6 +57,12 @@ export function initializeDatabase() {
         movie_release_year INTEGER,
         movie_length INTEGER,
         movie_progress INTEGER NOT NULL DEFAULT 0,
+        tmdb_id INTEGER,
+        overview TEXT,
+        release_date TEXT,
+        poster_path TEXT,
+        backdrop_path TEXT,
+        tmdb_rating REAL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (collection_id) REFERENCES scan_folders(id),
         UNIQUE (collection_id, path)
@@ -73,6 +87,12 @@ export function initializeDatabase() {
       ["movie_release_year", "INTEGER"],
       ["movie_length", "INTEGER"],
       ["movie_progress", "INTEGER NOT NULL DEFAULT 0"],
+      ["tmdb_id", "INTEGER"],
+      ["overview", "TEXT"],
+      ["release_date", "TEXT"],
+      ["poster_path", "TEXT"],
+      ["backdrop_path", "TEXT"],
+      ["tmdb_rating", "REAL"],
     ] as const;
 
     for (const [name, definition] of missingCollectionColumns) {
@@ -152,6 +172,12 @@ export function getCollectionItems(collectionId: number): CollectionItem[] {
           movie_release_year AS movieReleaseYear,
           movie_length AS movieLength,
           movie_progress AS movieProgress,
+          tmdb_id AS tmdbId,
+          overview,
+          release_date AS releaseDate,
+          poster_path AS posterPath,
+          backdrop_path AS backdropPath,
+          tmdb_rating AS tmdbRating,
           created_at AS createdAt
         FROM collections
         WHERE collection_id = ?
@@ -166,11 +192,7 @@ export function getCollectionItems(collectionId: number): CollectionItem[] {
 export function saveScanResults(
   path: string,
   collectionName: string,
-  videos: Array<{
-    path: string;
-    movieName: string;
-    movieReleaseYear: number | null;
-  }>,
+  videos: ScannedVideo[],
 ) {
   initializeDatabase();
 
@@ -189,11 +211,20 @@ export function saveScanResults(
       .get(path) as { id: number }).id;
 
     const upsertItem = database.prepare(
-      `INSERT INTO collections (collection_id, path, movie_name, movie_release_year)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO collections (
+         collection_id, path, movie_name, movie_release_year, tmdb_id,
+         overview, release_date, poster_path, backdrop_path, tmdb_rating
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(collection_id, path) DO UPDATE SET
-         movie_name = COALESCE(collections.movie_name, excluded.movie_name),
-         movie_release_year = COALESCE(collections.movie_release_year, excluded.movie_release_year)`,
+         movie_name = excluded.movie_name,
+         movie_release_year = COALESCE(excluded.movie_release_year, collections.movie_release_year),
+         tmdb_id = COALESCE(excluded.tmdb_id, collections.tmdb_id),
+         overview = COALESCE(excluded.overview, collections.overview),
+         release_date = COALESCE(excluded.release_date, collections.release_date),
+         poster_path = COALESCE(excluded.poster_path, collections.poster_path),
+         backdrop_path = COALESCE(excluded.backdrop_path, collections.backdrop_path),
+         tmdb_rating = COALESCE(excluded.tmdb_rating, collections.tmdb_rating)`,
     );
 
     for (const video of videos) {
@@ -202,6 +233,12 @@ export function saveScanResults(
         video.path,
         video.movieName,
         video.movieReleaseYear,
+        video.tmdbId ?? null,
+        video.overview ?? null,
+        video.releaseDate ?? null,
+        video.posterPath ?? null,
+        video.backdropPath ?? null,
+        video.tmdbRating ?? null,
       );
     }
 

@@ -26,6 +26,9 @@ npm install
 
 ### Development
 
+Copy `.env.example` to `.env` and add your TMDB API Read Access Token to
+`TMDB_API_READ_TOKEN` if you want scans to fetch movie metadata and posters.
+
 Start the development server with HMR:
 
 ```bash

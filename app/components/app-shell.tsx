@@ -23,12 +23,11 @@ export function AppShell({ children }: AppShellProps) {
       "collection" in match.loaderData,
   );
   const collection = collectionMatch?.loaderData as
-    | { collection?: { collectionName?: string } }
-    | undefined;
+    { collection?: { collectionName?: string } } | undefined;
   const collectionName = collection?.collection?.collectionName;
 
   return (
-    <div className="relative isolate min-h-dvh w-full max-w-[1180px] overflow-x-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
+    <div className="relative isolate flex min-h-dvh w-full max-w-[1180px] flex-col overflow-x-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[min(42vh,48rem)] max-w-[1180px] bg-cover bg-top-right bg-no-repeat opacity-55 grayscale-40 [mask-image:linear-gradient(to_top,#000_0%,#000_42%,transparent_100%)]"
@@ -73,7 +72,22 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10 flex-1">{children}</div>
+
+      <footer className="relative z-10 mt-auto flex min-h-16 items-end justify-end px-5 py-4 text-right sm:px-8">
+        <p className="max-w-md text-[10px] leading-relaxed text-foreground/60 drop-shadow-[0_1px_2px_var(--background)] sm:text-xs">
+          This product uses the{" "}
+          <a
+            href="https://www.themoviedb.org"
+            className="underline underline-offset-4 transition-colors hover:text-foreground"
+            target="_blank"
+            rel="noreferrer"
+          >
+            TMDB API
+          </a>{" "}
+          but is not endorsed or certified by TMDB.
+        </p>
+      </footer>
     </div>
   );
 }

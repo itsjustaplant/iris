@@ -56,29 +56,45 @@ export default function Collection() {
           {items.length ? (
             <section className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
               {items.map((item) => (
-                <article
-                  key={item.id}
-                  className="group min-w-0"
-                >
+                <article key={item.id} className="group min-w-0">
                   <div className="relative grid aspect-[2/3] w-full place-items-center overflow-hidden border border-border bg-card text-muted-foreground transition-colors group-hover:border-muted-foreground/50 group-hover:text-primary">
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-background"
-                    />
-                    <FilmSlateIcon
-                      className="relative size-10 sm:size-12"
-                      weight="duotone"
-                    />
-                  </div>
-                  <div className="mt-3 min-w-0">
-                    <h2 className="line-clamp-2 text-sm font-medium leading-snug">
-                      {item.displayName}
-                    </h2>
-                    <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span>{item.movieReleaseYear ?? "Unknown year"}</span>
-                      {item.movieProgress > 0 && (
-                        <span>{item.movieProgress}%</span>
-                      )}
+                    {item.posterPath ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w500${item.posterPath}`}
+                        alt={`${item.displayName} poster`}
+                        className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <>
+                        <div
+                          aria-hidden="true"
+                          className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-background"
+                        />
+                        <FilmSlateIcon
+                          className="relative size-10 sm:size-12"
+                          weight="duotone"
+                        />
+                      </>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent px-3 pb-3 pt-20 text-white sm:px-4 sm:pb-4 sm:pt-24">
+                      <h2 className="line-clamp-2 text-sm font-semibold leading-snug drop-shadow-sm sm:text-base">
+                        {item.displayName}
+                      </h2>
+                      <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-white/75">
+                        <span>
+                          {item.releaseDate?.slice(0, 4) ??
+                            item.movieReleaseYear ??
+                            "Unknown year"}
+                        </span>
+                        <span>
+                          {item.tmdbRating !== null
+                            ? `${item.tmdbRating.toFixed(1)} / 10`
+                            : item.movieProgress > 0
+                              ? `${item.movieProgress}%`
+                              : null}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </article>
