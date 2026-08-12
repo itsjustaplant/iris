@@ -111,9 +111,6 @@ export default function Collection() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <p className="text-sm text-muted-foreground">
-              {items.length} {items.length === 1 ? "item" : "items"}
-            </p>
             {isLocal && (
               <Button
                 variant="outline"

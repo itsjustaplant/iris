@@ -40,11 +40,6 @@ export function AppShell({ children }: AppShellProps) {
 
       <header className="sticky top-0 z-20 flex h-14 items-center border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
         <div className="flex items-center gap-3">
-          <img
-            src="/iris-background-removed.png"
-            alt="Iris"
-            className="size-8 object-contain"
-          />
           <span className="font-heading text-sm font-semibold tracking-tight">
             IRIS
           </span>
