@@ -25,6 +25,11 @@ export function AppShell({ children }: AppShellProps) {
   const collection = collectionMatch?.loaderData as
     { collection?: { collectionName?: string } } | undefined;
   const collectionName = collection?.collection?.collectionName;
+  const movie = collectionMatch?.loaderData as
+    | { movie?: { displayName?: string }; collection?: { id?: number } }
+    | undefined;
+  const movieName = movie?.movie?.displayName;
+  const collectionId = movie?.collection?.id;
 
   return (
     <div className="relative isolate flex min-h-dvh w-full max-w-[1180px] flex-col overflow-x-hidden bg-background text-foreground min-[1181px]:border min-[1181px]:border-border">
@@ -56,8 +61,24 @@ export function AppShell({ children }: AppShellProps) {
                 <>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem className="min-w-0">
-                    <BreadcrumbPage className="max-w-48 sm:max-w-80">
-                      {collectionName}
+                    {movieName && collectionId ? (
+                      <BreadcrumbLink to={`/collections/${collectionId}`}>
+                        {collectionName}
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="max-w-48 sm:max-w-80">
+                        {collectionName}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </>
+              )}
+              {movieName && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbPage className="max-w-40 sm:max-w-72">
+                      {movieName}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>

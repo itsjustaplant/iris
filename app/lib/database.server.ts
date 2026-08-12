@@ -208,6 +208,68 @@ export function getCollectionItems(collectionId: number): CollectionItem[] {
   }
 }
 
+export function getCollectionItem(collectionId: number, itemId: number) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    return (database
+      .prepare(
+        `SELECT
+          id,
+          path,
+          movie_name AS movieName,
+          movie_release_year AS movieReleaseYear,
+          movie_length AS movieLength,
+          movie_progress AS movieProgress,
+          tmdb_id AS tmdbId,
+          overview,
+          release_date AS releaseDate,
+          poster_path AS posterPath,
+          backdrop_path AS backdropPath,
+          tmdb_rating AS tmdbRating,
+          tmdb_last_fetched_at AS tmdbLastFetchedAt,
+          created_at AS createdAt
+        FROM collections
+        WHERE collection_id = ? AND id = ?`,
+      )
+      .get(collectionId, itemId) as CollectionItem | undefined) ?? null;
+  } finally {
+    database.close();
+  }
+}
+
+export function getCollectionItemById(itemId: number) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    return (database
+      .prepare(
+        `SELECT
+          id,
+          path,
+          movie_name AS movieName,
+          movie_release_year AS movieReleaseYear,
+          movie_length AS movieLength,
+          movie_progress AS movieProgress,
+          tmdb_id AS tmdbId,
+          overview,
+          release_date AS releaseDate,
+          poster_path AS posterPath,
+          backdrop_path AS backdropPath,
+          tmdb_rating AS tmdbRating,
+          tmdb_last_fetched_at AS tmdbLastFetchedAt,
+          created_at AS createdAt
+        FROM collections
+        WHERE id = ?`,
+      )
+      .get(itemId) as CollectionItem | undefined) ?? null;
+  } finally {
+    database.close();
+  }
+}
+
 export function saveScanResults(
   path: string,
   collectionName: string,

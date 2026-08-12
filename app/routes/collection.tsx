@@ -1,5 +1,5 @@
 import { ArrowsClockwiseIcon, FilmSlateIcon } from "@phosphor-icons/react";
-import { useFetcher, useLoaderData } from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
 
 import type { Route } from "./+types/collection";
 import { Button } from "~/components/ui/button";
@@ -135,7 +135,11 @@ export default function Collection() {
             <section className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
               {items.map((item) => (
                 <article key={item.id} className="group min-w-0">
-                  <div className="relative grid aspect-[2/3] w-full place-items-center overflow-hidden border border-border bg-card text-muted-foreground transition-colors group-hover:border-muted-foreground/50 group-hover:text-primary">
+                  <Link
+                    to={`/collections/${collection.id}/movies/${item.id}`}
+                    aria-label={`Play ${item.displayName}`}
+                    className="relative grid aspect-[2/3] w-full place-items-center overflow-hidden border border-border bg-card text-muted-foreground transition-colors group-hover:border-muted-foreground/50 group-hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                  >
                     {item.posterPath ? (
                       <img
                         src={`https://image.tmdb.org/t/p/w500${item.posterPath}`}
@@ -174,7 +178,7 @@ export default function Collection() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </article>
               ))}
             </section>
