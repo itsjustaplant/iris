@@ -88,3 +88,7 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 ---
 
 Built with ❤️ using React Router.
+
+## License
+
+Iris is free software licensed under the [GNU Affero General Public License v3.0 only](LICENSE).
