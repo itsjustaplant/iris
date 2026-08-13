@@ -5,5 +5,6 @@ export default [
   route("collections/:collectionId", "routes/collection.tsx"),
   route("collections/:collectionId/movies/:movieId", "routes/movie.tsx"),
   route("api/movies/:movieId/stream", "routes/api.movie-stream.ts"),
+  route("api/movies/:movieId/progress", "routes/api.movie-progress.ts"),
   route("api/folders", "routes/api.folders.ts"),
 ] satisfies RouteConfig;

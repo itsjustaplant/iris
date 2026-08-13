@@ -42,6 +42,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const items = getCollectionItems(collectionId).map((item) => ({
     ...item,
     displayName: item.movieName ?? item.path.split(/[\\/]/).pop() ?? "Untitled",
+    progressPercent:
+      item.movieLength && item.movieProgress > 0
+        ? Math.min(
+            100,
+            Math.round((item.movieProgress / item.movieLength) * 100),
+          )
+        : 0,
     path: isLocal ? item.path : null,
   }));
 
@@ -172,11 +179,30 @@ export default function Collection() {
                         <span>
                           {item.tmdbRating !== null
                             ? `${item.tmdbRating.toFixed(1)} / 10`
-                            : item.movieProgress > 0
-                              ? `${item.movieProgress}%`
+                            : item.progressPercent > 0
+                              ? `${item.progressPercent}%`
                               : null}
                         </span>
                       </div>
+                    </div>
+                    <div
+                      className="absolute inset-x-0 bottom-0 z-10 h-1 bg-white/20"
+                      role="progressbar"
+                      aria-label={`${item.displayName} watch progress`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={item.progressPercent}
+                    >
+                      <div
+                        className={`h-full transition-[width] ${
+                          item.progressPercent >= 75
+                            ? "bg-green-500"
+                            : item.progressPercent >= 35
+                              ? "bg-yellow-400"
+                              : "bg-red-500"
+                        }`}
+                        style={{ width: `${item.progressPercent}%` }}
+                      />
                     </div>
                   </Link>
                 </article>

@@ -270,6 +270,29 @@ export function getCollectionItemById(itemId: number) {
   }
 }
 
+export function updateMovieProgress(
+  itemId: number,
+  positionSeconds: number,
+  durationSeconds: number,
+) {
+  initializeDatabase();
+
+  const database = new DatabaseSync(databasePath);
+  try {
+    const result = database
+      .prepare(
+        `UPDATE collections
+         SET movie_progress = ?, movie_length = ?
+         WHERE id = ?`,
+      )
+      .run(positionSeconds, durationSeconds, itemId);
+
+    return result.changes > 0;
+  } finally {
+    database.close();
+  }
+}
+
 export function saveScanResults(
   path: string,
   collectionName: string,
