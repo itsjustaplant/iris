@@ -11,6 +11,8 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { AppShell } from "~/components/app-shell";
 
+const themeScript = `try{var theme=localStorage.getItem("iris-theme");if(theme==="dark"){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark"}}catch(e){}`;
+
 export function meta() {
   return [
     { title: "Iris" },
@@ -57,12 +59,13 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         {children}
